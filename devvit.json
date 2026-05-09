@@ -1,0 +1,70 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "color-guesser",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "inline": true,
+        "entry": "splash.html"
+      },
+      "game": {
+        "entry": "game.html"
+      },
+      "creator": {
+        "entry": "creator.html"
+      }
+    }
+  },
+  "media": {
+    "dir": "public"
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Create a new post",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      },
+      {
+        "label": "Create Custom ColorGuessr",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/custom-post-create"
+      },
+      {
+        "label": "Post Global Leaderboard",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/leaderboard-create"
+      }
+    ]
+  },
+  "permissions": {
+    "reddit": {
+      "enable": true,
+      "asUser": [
+        "SUBMIT_POST",
+        "SUBMIT_COMMENT"
+      ]
+    }
+  },
+  "triggers": {
+    "onAppInstall": "/internal/triggers/on-app-install"
+  },
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "dev": {
+    "subreddit": "cg_dev_2"
+  }
+}
