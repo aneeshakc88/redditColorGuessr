@@ -1,0 +1,498 @@
+<title>Phantom Fill</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#f3f5fa;
+  --ink:#1b2030;
+  --ink-soft:#4a5168;
+  --line:#d7dbe8;
+  --panel:#ffffff;
+  --code-bg:#141826;
+  --code-ink:#dfe4f5;
+  --code-dim:#7d84a0;
+  --blue:#007FFF;
+  --yellow:#c99a00;
+  --red:#CE1021;
+  --black-flag:#e0453c;
+  --black-flag-soft:#fbe4e2;
+  --accent:#3a5cff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#12141c;
+    --ink:#e7e9f4;
+    --ink-soft:#a3a8c2;
+    --line:#2b2f42;
+    --panel:#1a1d2b;
+    --code-bg:#0c0e16;
+    --code-ink:#e2e6f7;
+    --code-dim:#6f7590;
+    --yellow:#e0b93a;
+    --black-flag:#ff7a70;
+    --black-flag-soft:#3a1f22;
+    --accent:#7d93ff;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12141c;
+  --ink:#e7e9f4;
+  --ink-soft:#a3a8c2;
+  --line:#2b2f42;
+  --panel:#1a1d2b;
+  --code-bg:#0c0e16;
+  --code-ink:#e2e6f7;
+  --code-dim:#6f7590;
+  --yellow:#e0b93a;
+  --black-flag:#ff7a70;
+  --black-flag-soft:#3a1f22;
+  --accent:#7d93ff;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Work Sans', system-ui, sans-serif;
+  line-height:1.5;
+}
+.page{
+  max-width:760px;
+  margin:0 auto;
+  padding:56px 24px 80px;
+}
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12.5px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:600;
+  margin:0 0 10px;
+}
+h1{
+  font-family:'Fraunces', serif;
+  font-optical-sizing:auto;
+  font-weight:700;
+  font-size:clamp(2.1rem, 5vw, 2.8rem);
+  line-height:1.08;
+  letter-spacing:-.01em;
+  margin:0 0 14px;
+  text-wrap:balance;
+}
+.dek{
+  font-size:1.05rem;
+  color:var(--ink-soft);
+  max-width:60ch;
+  margin:0 0 40px;
+}
+h2{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.4rem;
+  margin:0 0 6px;
+  letter-spacing:-.005em;
+}
+.section{
+  margin-top:56px;
+  padding-top:32px;
+  border-top:1px solid var(--line);
+}
+.section-note{
+  color:var(--ink-soft);
+  font-size:.96rem;
+  max-width:56ch;
+  margin:0 0 22px;
+}
+
+/* --- hero flag + swatch reveal --- */
+.hero{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:22px;
+}
+.flag-render{
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  aspect-ratio:800/600;
+  max-width:340px;
+}
+.flag-render svg{display:block;width:100%;height:100%;}
+.hero-row{
+  display:flex;
+  gap:22px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+.hero-caption{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:8px;
+  text-align:center;
+}
+.swatch-list{
+  flex:1;
+  min-width:220px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.swatch-row{
+  display:grid;
+  grid-template-columns:22px 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper);
+}
+.swatch-row.fake{
+  border-color:var(--black-flag);
+  background:var(--black-flag-soft);
+}
+.swatch-dot{
+  width:18px;height:18px;border-radius:5px;
+  border:1px solid rgba(0,0,0,.12);
+}
+.swatch-hex{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  color:var(--ink);
+}
+.swatch-pct{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink-soft);
+}
+.swatch-row.fake .swatch-pct{color:var(--black-flag);}
+.tag{
+  display:inline-block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:5px;
+  background:var(--black-flag);
+  color:#fff;
+  margin-left:8px;
+  vertical-align:1px;
+}
+
+/* --- code panel --- */
+.code-panel{
+  background:var(--code-bg);
+  border-radius:12px;
+  padding:20px 22px;
+  overflow-x:auto;
+}
+.code-panel code{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  line-height:1.9;
+  color:var(--code-ink);
+  white-space:pre;
+}
+.mk-dead{
+  color:var(--code-dim);
+  text-decoration:line-through;
+  text-decoration-color:var(--black-flag);
+  text-decoration-thickness:1.5px;
+}
+.mk-live{
+  color:var(--yellow);
+  font-weight:600;
+  background:rgba(224,185,58,.14);
+  border-radius:3px;
+  padding:0 2px;
+}
+.callout-row{
+  display:flex;
+  gap:18px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+.callout{
+  flex:1;
+  min-width:200px;
+  border-radius:9px;
+  padding:12px 14px;
+  font-size:.88rem;
+  border:1px solid var(--line);
+}
+.callout.dead-c{color:var(--ink-soft);}
+.callout.dead-c b{color:var(--black-flag);}
+.callout.live-c b{color:var(--yellow);}
+
+/* --- rule strip --- */
+.rule-strip{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:26px 20px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  flex-wrap:wrap;
+  text-align:center;
+}
+.rule-pill{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  padding:9px 16px;
+  border-radius:999px;
+  border:1px solid var(--line);
+}
+.rule-pill.lose{color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--black-flag);}
+.rule-pill.win{color:var(--yellow); border-color:var(--yellow); font-weight:600;}
+.rule-arrow{color:var(--ink-soft); font-size:20px;}
+.rule-caption{
+  width:100%;
+  font-size:.92rem;
+  color:var(--ink-soft);
+  margin-top:4px;
+}
+
+/* --- identical-pair demo --- */
+.identical-demo{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:22px;
+}
+.identical-pair{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  flex-wrap:wrap;
+}
+.flag-render.small{
+  position:relative;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  width:220px;
+  aspect-ratio:800/600;
+  max-width:100%;
+}
+.flag-render.small svg{display:block;width:100%;height:100%;}
+.id-label{
+  position:absolute;
+  left:0; right:0; bottom:0;
+  text-align:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:.03em;
+  color:#fff;
+  background:rgba(0,0,0,.55);
+  padding:4px 0;
+}
+.id-equals{
+  font-family:'Fraunces', serif;
+  font-size:2.2rem;
+  color:var(--black-flag);
+  font-weight:700;
+}
+.identical-tag{
+  text-align:center;
+  font-size:.92rem;
+  color:var(--ink-soft);
+  margin:18px 0 0;
+}
+
+/* --- comparison table --- */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  font-size:.92rem;
+}
+th, td{
+  text-align:left;
+  padding:11px 14px;
+  border-bottom:1px solid var(--line);
+}
+th{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  font-weight:600;
+  background:var(--paper);
+}
+tr:last-child td{border-bottom:none;}
+td.num{font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;}
+td.hit{color:var(--black-flag); font-weight:600;}
+
+/* --- verdict --- */
+.verdict{
+  margin-top:56px;
+  padding:26px 26px;
+  border-radius:14px;
+  background:var(--panel);
+  border:1px solid var(--accent);
+}
+.verdict h2{color:var(--accent);}
+.verdict ol{
+  margin:14px 0 0;
+  padding-left:22px;
+  color:var(--ink-soft);
+  font-size:.95rem;
+}
+.verdict li{margin-bottom:6px;}
+.verdict code{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.85em;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--ink);
+}
+
+footer{
+  margin-top:44px;
+  font-size:.85rem;
+  color:var(--ink-soft);
+}
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">Flag data · build pipeline bug</p>
+  <h1>The flag that scans 98% black&mdash;and shows none</h1>
+  <p class="dek">DR&nbsp;Congo's source art paints every shape twice: once with a leftover default color, once with the real one. The build script counts both. The screen only ever shows one.</p>
+
+  <div class="hero">
+    <div class="hero-row">
+      <div>
+        <div class="flag-render">
+          <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#007FFF" d="M0 0h800v600H0z"/>
+            <path fill="#F7D618" d="M36 120h84l26-84 26 84h84l-68 52 26 84-68-52-68 52 26-84-68-52zM750 0 0 450v150h50l750-450V0h-50"/>
+            <path fill="#CE1021" d="M800 0 0 480v120l800-480V0"/>
+          </svg>
+        </div>
+        <div class="hero-caption">what a player sees</div>
+      </div>
+      <div class="swatch-list">
+        <div class="swatch-row">
+          <div class="swatch-dot" style="background:#007FFF"></div>
+          <div class="swatch-hex">#007FFF sky blue</div>
+          <div class="swatch-pct">66.4%</div>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch-dot" style="background:#CE1021"></div>
+          <div class="swatch-hex">#CE1021 red</div>
+          <div class="swatch-pct">19.6%</div>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch-dot" style="background:#F7D618"></div>
+          <div class="swatch-hex">#F7D618 yellow</div>
+          <div class="swatch-pct">11.9%</div>
+        </div>
+        <div class="swatch-row fake">
+          <div class="swatch-dot" style="background:#000"></div>
+          <div class="swatch-hex">#000000 black <span class="tag">not on flag</span></div>
+          <div class="swatch-pct">97.9%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Where the fake black comes from</h2>
+    <p class="section-note">Every shape in the source file carries two colors on the same tag. Here's the blue background path, exactly as it's stored:</p>
+    <div class="code-panel"><code>&lt;path <span class="mk-dead">fill="#000000"</span> <span class="mk-live">style="fill:#007FFF"</span> d="M0 0h800v600H0z"/&gt;</code></div>
+    <div class="callout-row">
+      <div class="callout dead-c"><b>fill="#000000"</b> &mdash; a leftover default. Never rendered. Every browser ignores it here.</div>
+      <div class="callout live-c"><b>style="fill:#007FFF"</b> &mdash; the real color. This is the blue you see.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>A rule the build script doesn't know</h2>
+    <p class="section-note">In SVG, an inline <code style="font-family:'IBM Plex Mono',monospace;background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:4px;">style</code> always beats a plain attribute on the same tag &mdash; browsers have one answer for which color wins. The scanner that builds this game's color list has no such rule: it just collects every hex code it finds, attribute or style, and treats them as equally real.</p>
+    <div class="rule-strip">
+      <span class="rule-pill lose">fill="#000000"</span>
+      <span class="rule-arrow">→</span>
+      <span class="rule-pill win">style wins: #007FFF</span>
+      <div class="rule-caption">Browser picks one. Scanner keeps both &mdash; so black enters the palette as if it were a real fourth color, sized to whatever shape it was hiding on.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Not a one-off</h2>
+    <p class="section-note">Same pattern, same phantom entry, one more flag in the set:</p>
+    <table>
+      <thead>
+        <tr><th>Flag</th><th>Real colors</th><th>Phantom black</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>DR Congo</td>
+          <td class="num">blue 66.4% · red 19.6% · yellow 11.9%</td>
+          <td class="num hit">#000000 at 97.9%</td>
+        </tr>
+        <tr>
+          <td>Arizona</td>
+          <td class="num">navy 46.5% · gold 20.0% · copper (untouched)</td>
+          <td class="num hit">#000000 at 25.5%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Why it reaches the player</h2>
+    <p class="section-note">Game picks a color at random each round, hides it, asks "what color was here?" DR&nbsp;Congo has 4 colors to pick from — 1 in 4 rounds it picks black.</p>
+    <div class="identical-demo">
+      <div class="identical-pair">
+        <div class="flag-render small">
+          <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#007FFF" d="M0 0h800v600H0z"/>
+            <path fill="#F7D618" d="M36 120h84l26-84 26 84h84l-68 52 26 84-68-52-68 52 26-84-68-52zM750 0 0 450v150h50l750-450V0h-50"/>
+            <path fill="#CE1021" d="M800 0 0 480v120l800-480V0"/>
+          </svg>
+          <span class="id-label">before</span>
+        </div>
+        <div class="id-equals">=</div>
+        <div class="flag-render small">
+          <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#007FFF" d="M0 0h800v600H0z"/>
+            <path fill="#F7D618" d="M36 120h84l26-84 26 84h84l-68 52 26 84-68-52-68 52 26-84-68-52zM750 0 0 450v150h50l750-450V0h-50"/>
+            <path fill="#CE1021" d="M800 0 0 480v120l800-480V0"/>
+          </svg>
+          <span class="id-label">after "hiding black"</span>
+        </div>
+      </div>
+      <p class="identical-tag">Pixel for pixel, the same image. Game still asks "what color did I just hide?" — nothing did.</p>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <h2>Bug, not a feature</h2>
+    <p class="section-note" style="margin-bottom:0;">Anywhere a player would be asked to spot or guess "black" on these two flags, the game is testing them against a color that was never on screen. Fix happens once, upstream, not per-flag:</p>
+    <ol>
+      <li>Before the scanner runs, drop a <code>fill="#000000"</code> attribute whenever a <code>style="fill:…"</code> sits on the same tag.</li>
+      <li>Re-run <code>npm run flags</code> (or scope it: <code>FLAGS_ONLY=DR Congo,Arizona npm run flags</code>) to regenerate just these two entries.</li>
+    </ol>
+  </div>
+
+  <footer>src/shared/flags-data.ts:92 (DR Congo), :183 (Arizona) · scripts/build-flags.ts palette()/ownership()</footer>
+
+</div>

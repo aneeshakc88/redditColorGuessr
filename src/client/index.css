@@ -1,4 +1,166 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
+/* Keep Tailwind's media-driven dark mode for every game, and additionally let a
+   page opt in permanently by stamping data-theme="dark" on <html>. ColorGuessr
+   uses the stamp; the others still follow the reader's system theme. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) { @slot; }
+  &:where([data-theme='dark'], [data-theme='dark'] *) { @slot; }
+}
+
 * { font-family: 'Figtree', sans-serif; }
+
+.mastermind-board::-webkit-scrollbar { display: none; }
+.mastermind-board { scrollbar-width: none; -ms-overflow-style: none; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-16px); }
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12, 0.3), 0 4px 18px rgba(0, 0, 0, 0.18); }
+  50% { box-shadow: 0 0 40px rgba(234, 88, 12, 0.5), 0 4px 18px rgba(0, 0, 0, 0.18); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes buttonHover {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2px); }
+}
+
+.splash-logo {
+  animation: float 3s ease-in-out infinite, glow 2.5s ease-in-out infinite;
+}
+
+.splash-title {
+  animation: fadeInScale 0.6s ease-out 0.2s both;
+}
+
+.splash-subtitle {
+  animation: fadeInScale 0.6s ease-out 0.3s both;
+}
+
+.splash-card {
+  animation: slideInUp 0.6s ease-out 0.4s both;
+}
+
+/* Slider-custom: nudge logo right on mobile so it clears the top-left rank card */
+@media (max-width: 480px) {
+  .splash-logo-shift { transform: translate(42px, -18px); }
+}
+
+/* Palette Poet creator: nudge the next empty round slot so "add a round" is discoverable */
+@keyframes ppAddPulse {
+  0%, 70%, 100% { transform: scale(1); border-color: #e5e7eb; color: #d1d5db; }
+  85% { transform: scale(1.12); border-color: #fdba74; color: #ea580c; }
+}
+
+.pp-add-pulse {
+  animation: ppAddPulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-add-pulse { animation: none; }
+}
+
+@keyframes mmCursorBlink {
+  50% { opacity: 0; }
+}
+
+.mm-cursor {
+  animation: mmCursorBlink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-cursor { animation: none; }
+}
+
+@keyframes mmSkelPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.85; }
+}
+
+.mm-skel {
+  animation: mmSkelPulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-skel { animation: none; }
+}
+
+.splash-button {
+  transition: all 0.3s ease;
+}
+
+.splash-button:hover {
+  animation: buttonHover 0.3s ease-out forwards;
+}
+
+/* ── Crack the Code creator: vault tumbler plate ── */
+@keyframes mmSeat {
+  0%   { transform: scale(1.28) translateY(-5px); }
+  70%  { transform: scale(0.96) translateY(1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.mm-seat {
+  animation: mmSeat 0.22s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes mmBreathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.07); }
+}
+
+.mm-target-ring {
+  animation: mmBreathe 1.8s ease-in-out infinite;
+}
+
+@keyframes mmLockPulse {
+  0%   { filter: brightness(1); }
+  40%  { filter: brightness(1.9); }
+  100% { filter: brightness(1); }
+}
+
+.mm-lock-pulse {
+  animation: mmLockPulse 0.34s ease-out both;
+}
+
+.mm-bow {
+  fill: none;
+  stroke: #8b9bad;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  transition: opacity 0.28s ease, stroke 0.35s ease;
+}
+
+/* Hinged on the left leg so the open state reads as an open padlock, not a raised one */
+.mm-bow-open {
+  transform: rotate(-22deg) translateY(-1px);
+  transform-box: view-box;
+  transform-origin: 7px 15px;
+}
+
+.mm-bow-shut { opacity: 0; }
+.mm-plate-locked .mm-bow-open { opacity: 0; }
+.mm-plate-locked .mm-bow-shut { opacity: 1; stroke: #3f9a63; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-seat, .mm-target-ring, .mm-lock-pulse { animation: none; }
+}

@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { audioCtx } from '../audio';
 
 type ColorWheelProps = {
   onColorSelected: (hexColor: string) => void;
   selectedColor?: string;
   muted?: boolean;
+  availH?: number;
 };
 
 function hsbToHex(h: number, s: number, v: number): string {
@@ -40,20 +42,13 @@ function hexToHsb(hex: string): { h: number; s: number; b: number } {
   return { h, s: s * 100, b: v * 100 };
 }
 
-// Shared AudioContext — created lazily on first user gesture
-let sharedCtx: AudioContext | null = null;
-function getCtx(): AudioContext {
-  if (!sharedCtx) sharedCtx = new AudioContext();
-  if (sharedCtx.state === 'suspended') void sharedCtx.resume();
-  return sharedCtx;
-}
-
 // Fixed musical notes: A5 / E5 / C5 — harmonically related, brief sine pops
 const NOTES = { h: 880, s: 659, b: 523 };
 
 function playTick(channel: 'h' | 's' | 'b') {
   try {
-    const ctx = getCtx();
+    const ctx = audioCtx();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -69,7 +64,7 @@ function playTick(channel: 'h' | 's' | 'b') {
   } catch { /* AudioContext unavailable */ }
 }
 
-export const ColorWheel = ({ onColorSelected, selectedColor, muted }: ColorWheelProps) => {
+export const ColorWheel = ({ onColorSelected, selectedColor, muted, availH }: ColorWheelProps) => {
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(100);
   const [brightness, setBrightness] = useState(100);
@@ -81,10 +76,21 @@ export const ColorWheel = ({ onColorSelected, selectedColor, muted }: ColorWheel
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
+  // Width fixed — keep wide enough to drag. Height fits available space, clamped.
   const sliderW = isMobile ? 44 : window.innerWidth < 900 ? 38 : 34;
-  const sliderH = isMobile
-    ? Math.min(300, Math.max(220, window.innerWidth * 0.55))
-    : 205;
+  const MIN_H = 170, MAX_H = isMobile ? 320 : 240;
+  const fallbackH = isMobile ? (window.innerWidth < 390 ? 225 : 280) : 205;
+  // Axis captions cost their line plus the column gap. MIN_H floors the track,
+  // so on a viewport too short to honour it the captions would be the part that
+  // gets clipped by the picker box — drop them there instead and the layout is
+  // exactly what it was before they existed.
+  const LABEL_BLOCK = 20;
+  // byVH: deterministic viewport budget so hex/submit are never pushed off.
+  const rawVH = window.innerHeight - (window.innerHeight < 560 ? 160 : 235);
+  const rawH = availH && availH > 0 ? availH - 6 : fallbackH;
+  const showLabels = Math.min(rawH, rawVH) >= MIN_H + LABEL_BLOCK;
+  const reserve = showLabels ? LABEL_BLOCK : 0;
+  const sliderH = Math.max(MIN_H, Math.min(MAX_H, rawH - reserve, rawVH - reserve));
   const thumbSize = Math.round(sliderW * 0.88);
   const gap = isMobile ? 22 : window.innerWidth < 900 ? 26 : 30;
 
@@ -143,29 +149,41 @@ export const ColorWheel = ({ onColorSelected, selectedColor, muted }: ColorWheel
     pointerEvents: 'none' as const,
   });
 
+  const LABELS = { h: 'HUE', s: 'SAT', b: 'BRIGHT' };
+
   const slider = (channel: 'h' | 's' | 'b', bg: string, pct: number) => (
-    <div
-      style={{
-        width: sliderW,
-        height: sliderH,
-        borderRadius: sliderW / 2,
-        background: bg,
-        position: 'relative',
-        cursor: 'pointer',
-        touchAction: 'none',
-        userSelect: 'none',
-        border: '1px solid rgba(0,0,0,0.1)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-        flexShrink: 0,
-      }}
-      {...handlers(channel)}
-    >
-      <div style={thumb(pct)} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div
+        style={{
+          width: sliderW,
+          height: sliderH,
+          borderRadius: sliderW / 2,
+          background: bg,
+          position: 'relative',
+          cursor: 'pointer',
+          touchAction: 'none',
+          userSelect: 'none',
+          border: '1px solid rgba(0,0,0,0.1)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          flexShrink: 0,
+        }}
+        {...handlers(channel)}
+      >
+        <div style={thumb(pct)} />
+      </div>
+      {showLabels && (
+        <span style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '0.08em',
+          color: '#9ca3af', lineHeight: 1, whiteSpace: 'nowrap',
+        }}>
+          {LABELS[channel]}
+        </span>
+      )}
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap }}>
       {slider('h', hueGrad, (hue / 359) * 100)}
       {slider('s', satGrad, saturation)}
       {slider('b', briGrad, brightness)}

@@ -4,7 +4,9 @@ import { trpcServer } from '@hono/trpc-server';
 
 import { createServer, getServerPort } from '@devvit/web/server';
 import { menu } from './routes/menu';
+import { forms } from './routes/forms';
 import { triggers } from './routes/triggers';
+import { cron } from './routes/cron';
 import { appRouter } from './trpc';
 import { createContext } from './context';
 
@@ -22,7 +24,9 @@ api.use(
 
 const internal = new Hono();
 internal.route('/menu', menu);
+internal.route('/form', forms);
 internal.route('/triggers', triggers);
+internal.route('/cron', cron);
 
 app.route('/api', api);
 app.route('/internal', internal);

@@ -13,6 +13,45 @@
       },
       "creator": {
         "entry": "creator.html"
+      },
+      "mastermind": {
+        "entry": "mastermind.html"
+      },
+      "mastermind-creator": {
+        "entry": "mastermind-creator.html"
+      },
+      "palette-poet": {
+        "entry": "palette-poet.html"
+      },
+      "palette-poet-creator": {
+        "entry": "palette-poet-creator.html"
+      },
+      "flag": {
+        "entry": "flag.html"
+      },
+      "memory": {
+        "entry": "memory.html"
+      },
+      "wire": {
+        "entry": "wire.html"
+      },
+      "wire-creator": {
+        "entry": "wire-creator.html"
+      },
+      "rewire": {
+        "entry": "rewire.html"
+      },
+      "rewire-creator": {
+        "entry": "rewire-creator.html"
+      },
+      "namecolor": {
+        "entry": "namecolor.html"
+      },
+      "namecolor-creator": {
+        "entry": "namecolor-creator.html"
+      },
+      "equinox": {
+        "entry": "equinox.html"
       }
     }
   },
@@ -40,13 +79,101 @@
         "endpoint": "/internal/menu/custom-post-create"
       },
       {
+        "label": "Post Daily Crack the Code",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/mastermind-create"
+      },
+      {
         "label": "Post Global Leaderboard",
         "description": "color-guesser",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/leaderboard-create"
+      },
+      {
+        "label": "Post Daily Flag ColorGuessr",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/flag-create"
+      },
+      {
+        "label": "[dev] Post Flag Gauntlet (all flags)",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/flag-gauntlet-create"
+      },
+      {
+        "label": "Post Daily Run (Color Memory)",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/memory-create"
+      },
+      {
+        "label": "Post Bonus Run (Color Memory)",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/memory-bonus-create"
+      },
+      {
+        "label": "Post Daily Colorwire",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/wire-create"
+      },
+      {
+        "label": "Post Daily Name This Color",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/namecolor-create"
+      },
+      {
+        "label": "Post Daily Equinox",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/equinox-create"
+      },
+      {
+        "label": "[dev] Reset my Equinox progress",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/equinox-reset-me"
+      },
+      {
+        "label": "Apply Tester Goddess Flair",
+        "description": "Sets Poetress special flair",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/apply-tester-flair"
+      },
+      {
+        "label": "[dev] Build a Rewire board",
+        "description": "color-guesser",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/rewire-creator-post"
       }
     ]
+  },
+  "forms": {
+    "post-create": "/internal/form/post-create",
+    "mastermind-create": "/internal/form/mastermind-create",
+    "leaderboard-create": "/internal/form/leaderboard-create",
+    "flag-create": "/internal/form/flag-create",
+    "memory-create": "/internal/form/memory-create",
+    "memory-bonus-create": "/internal/form/memory-bonus-create",
+    "wire-create": "/internal/form/wire-create",
+    "namecolor-create": "/internal/form/namecolor-create",
+    "equinox-create": "/internal/form/equinox-create"
   },
   "permissions": {
     "reddit": {
@@ -59,6 +186,111 @@
   },
   "triggers": {
     "onAppInstall": "/internal/triggers/on-app-install"
+  },
+  "scheduler": {
+    "tasks": {
+      "flag-daily-early": {
+        "endpoint": "/internal/cron/flag-daily",
+        "cron": "30 0 * * *"
+      },
+      "flag-daily-late": {
+        "endpoint": "/internal/cron/flag-daily",
+        "cron": "45 3 * * *"
+      },
+      "custom-scheduled": {
+        "endpoint": "/internal/cron/custom-scheduled",
+        "cron": "* * * * *"
+      },
+      "mastermind-daily": {
+        "endpoint": "/internal/cron/mastermind-daily",
+        "cron": "1 23 * * *"
+      },
+      "wire-daily": {
+        "endpoint": "/internal/cron/wire-daily",
+        "cron": "10 6 * * *"
+      },
+      "namecolor-daily": {
+        "endpoint": "/internal/cron/namecolor-daily",
+        "cron": "20 12 * * *"
+      },
+      "namecolor-sweep": {
+        "endpoint": "/internal/cron/namecolor-sweep",
+        "cron": "7 * * * *"
+      }
+    }
+  },
+  "settings": {
+    "subreddit": {
+      "scheduledPostsEnabled": {
+        "type": "boolean",
+        "label": "Enable scheduled custom ColorGuessr posts",
+        "helpText": "Master switch for the 10 timed custom-post drops. Turn off to pause all of them instantly — no app update needed.",
+        "defaultValue": true
+      },
+      "scheduledSlotsEnabled": {
+        "type": "multiSelect",
+        "label": "Active time slots",
+        "helpText": "Uncheck a time to pause just that slot. Times shown are CET.",
+        "options": [
+          { "label": "5:15pm CET", "value": "slot-1" },
+          { "label": "5:25pm CET", "value": "slot-2" },
+          { "label": "10:30pm CET", "value": "slot-3" },
+          { "label": "11:30pm CET", "value": "slot-4" },
+          { "label": "11:59pm CET", "value": "slot-5" },
+          { "label": "12:15am CET", "value": "slot-6" },
+          { "label": "1:45am CET", "value": "slot-7" },
+          { "label": "2:45am CET", "value": "slot-8" },
+          { "label": "3:45am CET", "value": "slot-9" },
+          { "label": "4:45am CET", "value": "slot-10" }
+        ],
+        "defaultValue": ["slot-1", "slot-2", "slot-3", "slot-4", "slot-5", "slot-6", "slot-7", "slot-8", "slot-9", "slot-10"]
+      },
+      "scheduledDaysEnabled": {
+        "type": "multiSelect",
+        "label": "Active days of week",
+        "helpText": "Uncheck a day to skip all scheduled posts on it. Day is evaluated in UTC.",
+        "options": [
+          { "label": "Sunday", "value": "sun" },
+          { "label": "Monday", "value": "mon" },
+          { "label": "Tuesday", "value": "tue" },
+          { "label": "Wednesday", "value": "wed" },
+          { "label": "Thursday", "value": "thu" },
+          { "label": "Friday", "value": "fri" },
+          { "label": "Saturday", "value": "sat" }
+        ],
+        "defaultValue": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+      },
+      "scheduledStopDate": {
+        "type": "string",
+        "label": "Auto-stop date (optional)",
+        "helpText": "YYYY-MM-DD. On and after this date, no scheduled posts will be created. Leave blank to run indefinitely.",
+        "placeholder": "2026-08-01"
+      },
+      "flagPostsEnabled": {
+        "type": "boolean",
+        "label": "Enable daily Flag ColorGuessr posts",
+        "helpText": "Turn off to pause the daily Flag ColorGuessr cron posts.",
+        "defaultValue": true
+      },
+      "mastermindPostsEnabled": {
+        "type": "boolean",
+        "label": "Enable daily Crack the Code posts",
+        "helpText": "Turn off to pause the daily Crack the Code cron post (12:01am CET).",
+        "defaultValue": true
+      },
+      "wirePostsEnabled": {
+        "type": "boolean",
+        "label": "Enable daily Colorwire posts",
+        "helpText": "Turn off to pause the daily Colorwire cron post (8:10am CET).",
+        "defaultValue": true
+      },
+      "namecolorPostsEnabled": {
+        "type": "boolean",
+        "label": "Enable daily Name This Color posts",
+        "helpText": "Turn off to pause the daily Name This Color cron post (2:20pm CET).",
+        "defaultValue": true
+      }
+    }
   },
   "scripts": {
     "dev": "vite build --watch",

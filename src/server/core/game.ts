@@ -29,11 +29,11 @@ export function getDailyPuzzle(date: Date = new Date()) {
   return selected;
 }
 
-export function calculateScore(actualHex: string, guessHex: string): number {
+export function calculateScore(actualHex: string, guessHex: string, maxScore = 20): number {
   const [l1, a1, b1] = hexToLab(actualHex);
   const [l2, a2, b2] = hexToLab(guessHex);
   const de = Math.sqrt((l1 - l2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2);
-  return Math.min(20, Math.max(0, Math.round((1 - Math.min(de, 100) / 100) * 20)));
+  return Math.min(maxScore, Math.max(0, Math.round((1 - Math.min(de, 100) / 100) * maxScore)));
 }
 
 export function formatHexColor(hex: string): string {

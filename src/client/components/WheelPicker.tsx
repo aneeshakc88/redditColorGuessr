@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { audioCtx } from '../audio';
 
 function hsbToHex(h: number, s: number, v: number): string {
   s /= 100; v /= 100;
@@ -34,23 +35,11 @@ function hexToHsb(hex: string): { h: number; s: number; b: number } {
   return { h, s: s * 100, b: v * 100 };
 }
 
-// Shared AudioContext
-let sharedCtx: AudioContext | null = null;
-function getCtx(): AudioContext | null {
-  try {
-    const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return null;
-    if (!sharedCtx) sharedCtx = new AC();
-    if (sharedCtx.state === 'suspended') void sharedCtx.resume();
-    return sharedCtx;
-  } catch { return null; }
-}
-
 const NOTES = { wheel: 880, bar: 523 } as const;
 
 function playTick(channel: 'wheel' | 'bar') {
   try {
-    const ctx = getCtx();
+    const ctx = audioCtx();
     if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -72,9 +61,13 @@ type WheelPickerProps = {
   selectedColor?: string;
   muted?: boolean;
   hintSlot?: React.ReactNode;
+  availW?: number;
+  availH?: number;
+  /** Exact box to fit inside (measured by parent). Overrides the viewport heuristics. */
+  fit?: { w: number; h: number };
 };
 
-export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot }: WheelPickerProps) => {
+export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot, availW, availH, fit }: WheelPickerProps) => {
   const init = selectedColor?.startsWith('#') ? hexToHsb(selectedColor) : { h: 120, s: 100, b: 100 };
   const [hue, setHue] = useState(init.h);
   const [sat, setSat] = useState(init.s);
@@ -88,12 +81,15 @@ export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot }:
   const satRef = useRef(sat);
   const briRef = useRef(bri);
   const mutedRef = useRef(muted);
-  hueRef.current = hue; satRef.current = sat; briRef.current = bri; mutedRef.current = muted;
+  useLayoutEffect(() => {
+    hueRef.current = hue; satRef.current = sat; briRef.current = bri; mutedRef.current = muted;
+  });
 
   useEffect(() => {
     if (skipSyncRef.current) { skipSyncRef.current = false; return; }
     if (selectedColor?.startsWith('#')) {
       const { h, s, b } = hexToHsb(selectedColor);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHue(h); setSat(s); setBri(b);
     }
   }, [selectedColor]);
@@ -113,7 +109,12 @@ export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot }:
     const radius = rect.width / 2;
     // +90 aligns hue=0 (red) with 12-o'clock to match CSS conic-gradient(from 0deg)
     const newH = ((Math.atan2(dy, dx) * 180 / Math.PI) + 90 + 360) % 360;
-    const newS = Math.min(Math.sqrt(dx * dx + dy * dy) / radius * 100, 100);
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    // Dead zone at the centre: unlike the brightness bar, which clamps to 0/100
+    // when you overshoot its edges, the wheel's centre is a single point that's
+    // nearly impossible to click exactly — snap nearby clicks to true S=0 (white/grey).
+    const DEAD = 6;
+    const newS = dist < DEAD ? 0 : Math.min((dist - DEAD) / (radius - DEAD) * 100, 100);
     setHue(newH); setSat(newS);
     skipSyncRef.current = true;
     tickThrottle('wheel');
@@ -131,12 +132,36 @@ export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot }:
   };
 
   const isMobile = window.innerWidth < 480;
-  const wheelSize = isMobile
-    ? Math.min(240, Math.max(190, window.innerWidth - 60))
-    : Math.min(195, Math.max(160, window.innerWidth - 80));
-  const barH = isMobile ? 30 : 25;
+  const shortVp = window.innerHeight < 720; // smaller phones — pull picker up so hex stays visible
+  const marginTop = fit ? 0 : shortVp ? 6 : 16;
+  const gap = fit ? 14 : shortVp ? 10 : 14;
 
-  const thumbR = 11;
+  let wheelSize: number;
+  let barH: number;
+  if (fit) {
+    // Bar is a fraction of the wheel, so solve for both at once: wheel + gap + K*wheel <= fit.h
+    const K = 0.12;
+    wheelSize = Math.round(Math.max(80, Math.min(fit.w, (fit.h - gap) / (1 + K), 400)));
+    barH = Math.max(24, Math.min(Math.round(wheelSize * K), 40));
+    // Bar has a floor, so on very short boxes re-solve the wheel against the real bar height
+    wheelSize = Math.max(80, Math.min(wheelSize, fit.h - gap - barH));
+  } else {
+    barH = isMobile ? 30 : 25;
+    const vChrome = marginTop + gap + barH; // space above/between wheel and bar
+    const MIN = isMobile ? 180 : 160;
+    const MAX = isMobile ? 250 : 210;
+    // Three independent budgets, take the smallest:
+    //  byW  — picker box width
+    //  byH  — measured leftover height (async, may lag a frame)
+    //  byVH — deterministic: viewport minus all chrome, so hex/submit never get eaten
+    const byW = availW && availW > 0 ? availW - 8 : (isMobile ? window.innerWidth - 60 : window.innerWidth - 80);
+    const byH = availH && availH > 0 ? availH - vChrome : 9999;
+    const reserve = window.innerHeight < 560 ? 210 : shortVp ? 300 : 290;
+    const byVH = window.innerHeight - reserve;
+    wheelSize = Math.max(MIN, Math.min(MAX, byW, byH, byVH));
+  }
+
+  const thumbR = fit ? Math.max(11, Math.min(Math.round(wheelSize * 0.05), 16)) : 11;
   const maxR = wheelSize / 2 - thumbR;
 
   const angleRad = (hue - 90) * Math.PI / 180;
@@ -146,7 +171,7 @@ export const WheelPicker = ({ onColorSelected, selectedColor, muted, hintSlot }:
   const fullBriHex = hsbToHex(hue, sat, 100);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', marginTop: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap, width: '100%', marginTop }}>
       {/* Hue / Saturation wheel */}
       <div
         ref={wheelRef}

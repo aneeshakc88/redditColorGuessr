@@ -14,7 +14,7 @@ export default defineConfig([
       ecmaVersion: 2023,
       globals: globals.node,
       parserOptions: {
-        project: ['./tools/tsconfig.server.json'],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -26,7 +26,7 @@ export default defineConfig([
       ecmaVersion: 2023,
       globals: globals.browser,
       parserOptions: {
-        project: ['./tools/tsconfig.shared.json'],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -39,7 +39,7 @@ export default defineConfig([
       ecmaVersion: 2023,
       globals: globals.browser,
       parserOptions: {
-        project: ['./tools/tsconfig.client.json'],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
